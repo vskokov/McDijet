@@ -734,7 +734,7 @@ double DIS::integrated_Xs(double Q, double W, int pol)
 }
 
 DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain) {
-    double sqrtS = sqrt( pow(mp,2) + 2 * E_e * ( E_e + sqrt(pow(E_p,2) - pow(mp,2)) ) ); // The energy in CM frame
+    double sqrtS = sqrt( pow(mp,2) + 2 * E_e * ( E_p + sqrt(pow(E_p,2) - pow(mp,2)) ) ); // The energy in CM frame
 
     S = sqrtS*sqrtS;
 
@@ -847,7 +847,7 @@ vector<double> DIS::operator() (void)
         Q = sqrt(Q2);
         W = sqrt(W2);
 
-        double rapidity_shift = log ( 2.0*(E_p - sqrt(pow(E_p,2)-pow(mp,2)))/( 2.0*(W - sqrt(pow(W,2)-pow(2.0*mp,2)) ) ) );
+        double rapidity_shift = log ( 2.0*(E_p - sqrt(pow(E_p,2)-pow(mp,2)))/( (W - sqrt(pow(W,2)-pow(2.0*mp,2)) ) ) );
         TMD*  generator = new TMD(W,Q,A);
         DJ = new DiJetEvent (generator, rapidity_shift);
 
