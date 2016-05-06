@@ -379,7 +379,7 @@ The class generating random events that correspond to the specific x-section's f
 {
 
     TMD *Xsection;
-    double rapidity_shift; // Rapidity shift from CM to Lab
+    double nplus; // Nplus to transfer from CM to Lab
     //Begin: Random number generators
     std::uniform_real_distribution<> *z_sample;
     std::uniform_real_distribution<> *Pt_sample;
@@ -392,7 +392,7 @@ The class generating random events that correspond to the specific x-section's f
     // the maximum value of the distribution; this function is a helper function, returns the x-section
     double z_min, z_max, x0, Xsmax;
   public:
-    DiJetEvent(TMD* Xs, double rapidity_shiftin); // The constructor; a pointer to a TMD object has to be provided
+    DiJetEvent(TMD* Xs, double nplusin); // The constructor; a pointer to a TMD object has to be provided
     ~DiJetEvent(); // The destructor
     vector<double>  operator() (int pol); // Returns a vector of all random kinematic variables, e.g. q⊥, P⊥
     vector<double> k1k2f(vector<double>  params); // Computes k1 and k2, from Eq 3 of 1508.04438
@@ -421,39 +421,25 @@ vector<double> DiJetEvent::k1k2f(vector<double>  params)
     double k2x =  -Ptx + (1.0-z)*qtx;
     double k2y =  -Pty + (1.0-z)*qty;
 
-	double W = Xsection->get_W(); 
-	double Q = Xsection->get_Q(0); // 0 here is meaningless  
-
-	double P = 0.5*(mp*mp+Q*Q+W*W)/W;
-    double nplus = (sqrt(-pow(mp,2) + pow(P,2)) + sqrt(-pow(mp,2) + pow(P,2) - pow(Q,2)))/sqrt(2);
-
     double k1perp2 = k1x*k1x+k1y*k1y;
     double k2perp2 = k2x*k2x+k2y*k2y;
-    double k1z = (z*nplus - k1perp2/(2*z*nplus))/sqrt(2); // In CM frame of photon and target
+    //nplus = Xsection->get_W()/sqrt(2); 
+	double k1z = (z*nplus - k1perp2/(2*z*nplus))/sqrt(2); // In CM frame of photon and target
     double k2z = ((1-z)*nplus - k2perp2/(2*(1-z)*nplus))/sqrt(2);
-    assert (k1z>0. && k2z>0.);
-
-    double y1 = log( k1z/sqrt(k1perp2) + sqrt(1.0 + k1z*k1z/k1perp2));
-    double y2 = log( k2z/sqrt(k2perp2) + sqrt(1.0 + k2z*k2z/k2perp2));
-
-
-    double k1z_lab = sqrt(k1perp2)*sinh(y1+rapidity_shift);
-    double k2z_lab = sqrt(k2perp2)*sinh(y2-rapidity_shift);
-
-    double k1E_lab = sqrt(k1perp2+pow(k1z_lab,2)+epsilon);
-    double k2E_lab = sqrt(k2perp2+pow(k2z_lab,2)+epsilon);
+    //assert (k1z>0. && k2z>0.);
+    
+	double k1E = sqrt(k1perp2+pow(k1z,2)+epsilon);
+    double k2E = sqrt(k2perp2+pow(k2z,2)+epsilon);
 
     vector<double> k1k2;
     k1k2.push_back(k1x);
     k1k2.push_back(k1y);
-    k1k2.push_back(k1z_lab);
     k1k2.push_back(k1z);
-    k1k2.push_back(k1E_lab);
+    k1k2.push_back(k1E);
     k1k2.push_back(k2x);
     k1k2.push_back(k2y);
-    k1k2.push_back(k2z_lab);
     k1k2.push_back(k2z);
-    k1k2.push_back(k2E_lab);
+    k1k2.push_back(k2E);
 
     return k1k2;
 }
@@ -516,7 +502,8 @@ double DiJetEvent::f_minimize(const gsl_vector * x, void * params) {
     return ( - (*(instance->Xsection))(Pt, qt, z, 0.0,2) ); //Returns negative x-section to be minimized
 }
 
-DiJetEvent::DiJetEvent(TMD* Xs, double rapidity_shiftin): Xsection(Xs), rapidity_shift(rapidity_shiftin) {
+DiJetEvent::DiJetEvent(TMD* Xs, double nplusin): Xsection(Xs), nplus(nplusin) 
+{
     z_min =  z_reg;
     z_max = 1.0-z_reg;
 
@@ -857,13 +844,11 @@ vector<double> DIS::operator() (void)
         Q = sqrt(Q2);
         W = sqrt(W2);
 
-		double E_pCM = (W2+pow(mp,2)+Q2)/(2*W); // Both virtuality and proton mass are taken into account  
-        double rapidity_shift = log ( (E_p - sqrt(pow(E_p,2)-pow(mp,2)))/( (E_pCM - sqrt(pow(E_pCM,2)-pow(mp,2)) ) ) );
-        
-		assert (rapidity_shift < 0.);
+        double x = Q2/(W2-mp*mp-Q2);
+		double nplus = x*sqrt(2)*E_e;  
         
         TMD*  generator = new TMD(W,Q,A);
-        DJ = new DiJetEvent (generator, rapidity_shift);
+        DJ = new DiJetEvent (generator, nplus);
 
         pol = 0; //transverse
         if (longit) pol=1; //longit
