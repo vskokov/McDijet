@@ -35,6 +35,7 @@
 #include <fstream>
 #include <string>
 #include <random>
+#include <assert.h>
 
 /*
 // Older versions of gcc may require explicit inclusion of the boost librariries
@@ -182,7 +183,6 @@ class TMD
     // JIMWLK is computed on a lattice of a certain transverse size.
 
     void load_data(void); //The function to load the external data file from the JIMWLK evolution
-    double get_Q(double Pt); // Return Q (it is Pt independent, the Pt is kept due to historical reasons)
     double get_epsf2(double Q, double z); //ϵ_f^2 = z(1-z) Q^2, see the top of the page 2 in 1508.04438
     double get_Xsection(double Pt, double qt, double z, double phi, int pol); // Returns the crossection
     bool Out_of_Kinematic_Constrains(double Pt, double qt, double x); // Retruns true, if the variables are
@@ -192,6 +192,7 @@ class TMD
   public:
     constexpr static  double x0 = X0;
     double get_W(void);
+    double get_Q(double Pt); // Return Q (it is Pt independent, the Pt is kept due to historical reasons)
     TMD(double sqrtSin, double Qin, int A); // The constructor
     virtual ~TMD(); //The destructor
     vector<double> get_Xsection_components(double Pt, double qt, double z, double phi);
@@ -401,7 +402,7 @@ The class generating random events that correspond to the specific x-section's f
 vector<double> DiJetEvent::k1k2f(vector<double>  params)
 // Computes k1 and k2, from Eq 3 of 1508.04438
 {
-    double epsilon = 1e-10;
+    double epsilon = 1e-5;
     double Pt = params.at(0);
     double qt = params.at(1);
     double z = params.at(2);
@@ -420,30 +421,38 @@ vector<double> DiJetEvent::k1k2f(vector<double>  params)
     double k2x =  -Ptx + (1.0-z)*qtx;
     double k2y =  -Pty + (1.0-z)*qty;
 
-    double nplus = Xsection->get_W()/sqrt(2);
+	double W = Xsection->get_W(); 
+	double Q = Xsection->get_Q(0); // 0 here is meaningless  
+
+	double P = 0.5*(mp*mp+Q*Q+W*W)/W;
+    double nplus = (sqrt(-pow(mp,2) + pow(P,2)) + sqrt(-pow(mp,2) + pow(P,2) - pow(Q,2)))/sqrt(2);
 
     double k1perp2 = k1x*k1x+k1y*k1y;
     double k2perp2 = k2x*k2x+k2y*k2y;
     double k1z = (z*nplus - k1perp2/(2*z*nplus))/sqrt(2); // In CM frame of photon and target
     double k2z = ((1-z)*nplus - k2perp2/(2*(1-z)*nplus))/sqrt(2);
+    assert (k1z>0. && k2z>0.);
 
-    double y1 = 0.5*log( fabs( (sqrt(k1perp2) + k1z)/(sqrt(k1perp2) - k1z) ) );
-    double y2 = 0.5*log( fabs( (sqrt(k2perp2) + k2z)/(sqrt(k2perp2) - k2z) ) );
+    double y1 = log( k1z/sqrt(k1perp2) + sqrt(1.0 + k1z*k1z/k1perp2));
+    double y2 = log( k2z/sqrt(k2perp2) + sqrt(1.0 + k2z*k2z/k2perp2));
 
-    double k1z_lab = sqrt(k1perp2)*sinh(y1-rapidity_shift);
+
+    double k1z_lab = sqrt(k1perp2)*sinh(y1+rapidity_shift);
     double k2z_lab = sqrt(k2perp2)*sinh(y2-rapidity_shift);
 
-    double k1E_lab = sqrt(k1perp2+pow(k1z_lab,2));
-    double k2E_lab = sqrt(k2perp2+pow(k2z_lab,2));
+    double k1E_lab = sqrt(k1perp2+pow(k1z_lab,2)+epsilon);
+    double k2E_lab = sqrt(k2perp2+pow(k2z_lab,2)+epsilon);
 
     vector<double> k1k2;
     k1k2.push_back(k1x);
     k1k2.push_back(k1y);
     k1k2.push_back(k1z_lab);
+    k1k2.push_back(k1z);
     k1k2.push_back(k1E_lab);
     k1k2.push_back(k2x);
     k1k2.push_back(k2y);
     k1k2.push_back(k2z_lab);
+    k1k2.push_back(k2z);
     k1k2.push_back(k2E_lab);
 
     return k1k2;
@@ -733,7 +742,8 @@ double DIS::integrated_Xs(double Q, double W, int pol)
     return result;
 }
 
-DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain) {
+DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain) 
+{
     double sqrtS = sqrt( pow(mp,2) + 2 * E_e * ( E_p + sqrt(pow(E_p,2) - pow(mp,2)) ) ); // The energy in CM frame
 
     S = sqrtS*sqrtS;
@@ -847,7 +857,11 @@ vector<double> DIS::operator() (void)
         Q = sqrt(Q2);
         W = sqrt(W2);
 
-        double rapidity_shift = log ( 2.0*(E_p - sqrt(pow(E_p,2)-pow(mp,2)))/( (W - sqrt(pow(W,2)-pow(2.0*mp,2)) ) ) );
+		double E_pCM = (W2+pow(mp,2)+Q2)/(2*W); // Both virtuality and proton mass are taken into account  
+        double rapidity_shift = log ( (E_p - sqrt(pow(E_p,2)-pow(mp,2)))/( (E_pCM - sqrt(pow(E_pCM,2)-pow(mp,2)) ) ) );
+        
+		assert (rapidity_shift < 0.);
+        
         TMD*  generator = new TMD(W,Q,A);
         DJ = new DiJetEvent (generator, rapidity_shift);
 
