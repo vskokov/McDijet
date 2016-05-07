@@ -843,9 +843,10 @@ vector<double> DIS::operator() (void)
 
         Q = sqrt(Q2);
         W = sqrt(W2);
-
-        double x = Q2/(W2-mp*mp-Q2);
-		double nplus = x*sqrt(2)*E_e;  
+		
+		double P0=0.5*(W2+Q2+mp*mp)/W; 
+        double xi = (P0+sqrt(P0*P0-mp*mp))/(E_p+sqrt(E_p*E_p-mp*mp));
+		double nplus = W/(xi*sqrt(2));  
         
         TMD*  generator = new TMD(W,Q,A);
         DJ = new DiJetEvent (generator, nplus);
