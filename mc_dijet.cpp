@@ -50,7 +50,7 @@ using namespace std;
 typedef mt19937 RNGType;
 
 const size_t number_of_events=1000000; // The total number of events to be generated
-const double E_e = 25.0; // Electorn energy in the lab frame
+const double E_e = 15.0; // Electorn energy in the lab frame
 const double E_p = 100.0; // Proton energy in the lab frame
 
 const double alpha_em = 1.0/137.0; // α = e^2/4π
@@ -421,12 +421,13 @@ vector<double> DiJetEvent::k1k2f(vector<double>  params)
     double k2x =  -Ptx + (1.0-z)*qtx;
     double k2y =  -Pty + (1.0-z)*qty;
 
-    double k1perp2 = k1x*k1x+k1y*k1y;
+	
+	double k1perp2 = k1x*k1x+k1y*k1y;
     double k2perp2 = k2x*k2x+k2y*k2y;
-    //nplus = Xsection->get_W()/sqrt(2); 
-	double k1z = (z*nplus - k1perp2/(2*z*nplus))/sqrt(2); // In CM frame of photon and target
+
+
+	double k1z = (z*nplus - k1perp2/(2*z*nplus))/sqrt(2);
     double k2z = ((1-z)*nplus - k2perp2/(2*(1-z)*nplus))/sqrt(2);
-    //assert (k1z>0. && k2z>0.);
     
 	double k1E = sqrt(k1perp2+pow(k1z,2)+epsilon);
     double k2E = sqrt(k2perp2+pow(k2z,2)+epsilon);
@@ -846,8 +847,8 @@ vector<double> DIS::operator() (void)
 		
 		double subW2 = W2 + Q2 - mp*mp; 
 		double subS = S - mp*mp; 
-		double yp = 0.5*subW2/subS*(1+sqrt(1+4*Q2*mp*mp/pow(subW2,2)));  
-		double nplus = yp*sqrt(2)*E_e;  
+		double yprime = 0.5*subW2/subS*(1.0+sqrt(1.0+4.0*Q2*mp*mp/pow(subW2,2)));  
+		double nplus = yprime*(sqrt(2))*E_e;  
         
         TMD*  generator = new TMD(W,Q,A);
         DJ = new DiJetEvent (generator, nplus);
