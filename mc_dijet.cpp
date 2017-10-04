@@ -74,7 +74,7 @@ constexpr double X0 = 1e-2; // The maximal value of Bjorken x and x_g
 
 // Below I the parameters for the Gold Nucleus are defined
 const double S_perp0 = 1300; // The transverse area S⊥ in mb
-const double Qs0 = 1; // The saturation scale in GeV
+const double Qs0 = 1.2; // The saturation scale in GeV
 const int A0 = 197; // The number of nucleons
 
 const double M = 1; //The nuclon mass
@@ -88,7 +88,7 @@ double yf(double Q2, double W2, double S)
  y = (W^2 - M^2 + Q^2) / (s - M^2)
  */
 {
-    return (W2-M*M+Q2)/(S-M*M);
+    return min(1.0,(W2-M*M+Q2)/(S-M*M));
 }
 
 
@@ -98,7 +98,7 @@ double Flux_T(double Q2, double W2, double S)
  */
 {
     double y = yf(Q2,W2,S);
-    double redy = 1-y;
+    double redy = 1.0-y;
     return  alpha_em/(2*M_PI*Q2*S*y) * (1+redy*redy) ;
 }
 
@@ -108,7 +108,7 @@ double Flux_L(double Q2, double W2, double S)
  */
 {
     double y = yf(Q2,W2,S);
-    double redy = 1-y;
+    double redy = 1.0-y;
     return  alpha_em/(M_PI*Q2*S*y) * redy  ;
 }
 
@@ -178,7 +178,7 @@ class TMD
     double Qs; // The saturation scele in GeV
 
     constexpr static double sum_charge2 = .666666; // The sum of quark electric charges squared; ∑_f q_f^2
-    constexpr static double alpha_s = .15; // α_s Can be changed.
+    constexpr static double alpha_s = .25; // α_s Can be changed.
     constexpr static double S_perp_JIMWLK =  2704.0; // Do not change! The conversion factor.
     // JIMWLK is computed on a lattice of a certain transverse size.
 
@@ -620,6 +620,8 @@ class DIS
     double* vec_Q2;
     double* vec_W2;
 
+	double MaxSigmadQ2dW2; 
+
     //Integrated X-sections (in the defined kinematical regime)
     double IntXS_T, IntXS_L;
 
@@ -759,6 +761,8 @@ DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain)
 
     IntXS_T =0.0;
     IntXS_L =0.0;
+	MaxSigmadQ2dW2=0.0; 
+	
 
     for(int i=0; i<ind_Q2; i++) {
         double Q2 = Q2_min + Q2_step*i;
@@ -770,10 +774,15 @@ DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain)
             double W = sqrt(W2);
             Xs_T[i+j*ind_Q2] = Flux_T(Q2, W2, S) * integrated_Xs(Q, W, 0);
             Xs_L[i+j*ind_Q2] = Flux_L(Q2, W2, S) * integrated_Xs(Q, W, 1);
+			
+			MaxSigmadQ2dW2 = max(MaxSigmadQ2dW2, Xs_T[i+j*ind_Q2] + Xs_L[i+j*ind_Q2] );   
+			//cerr << Q << " "<< W << " " << Xs_T[i+j*ind_Q2] << " " <<  Xs_L[i+j*ind_Q2] << endl ;
+			//cerr << Q << " "<< W << " " <<  Flux_T(Q2, W2, S)  << " " <<  Flux_L(Q2, W2, S)   << endl ;
 
             IntXS_T+=Xs_T[i+j*ind_Q2]*W2_step*Q2_step;
             IntXS_L+=Xs_L[i+j*ind_Q2]*W2_step*Q2_step;
         }
+		//cerr << endl;
     }
     cout << "# done generating interpolating cache\n";
     cout << "# sqrt(s) A  integrated x_sections\n";
@@ -823,18 +832,26 @@ vector<double> DIS::operator() (void)
 
     double W2_max = S;
     do {
-        Q2 = (*Q2_sample)(*rng);
+		// Sample Q2 and W2 according to integrated x-section 
+		do {
+        	Q2 = (*Q2_sample)(*rng);
 
-        double W2_min = M*M+Q2_min*(1.0-X0)/X0;
+        	double W2_min = M*M+Q2_min*(1.0-X0)/X0;
 
-        W2_sample = new uniform_real_distribution<> ( W2_min, W2_max );
+        	W2_sample = new uniform_real_distribution<> ( W2_min, W2_max );
 
-        W2 = (*W2_sample)(*rng);
+        	W2 = (*W2_sample)(*rng);
+        	r = (*r_sample)(*rng);
+        
+        	Xs_L =  interp2d_spline_eval(interp_Xs_L,  Q2, W2,  xa, ya);
+        	Xs_T =  interp2d_spline_eval(interp_Xs_T,  Q2, W2,  xa, ya);
+		
+		}
+		while(r> (Xs_L + Xs_T)/MaxSigmadQ2dW2) ;
+		// Pick polarization 
+
         r = (*r_sample)(*rng);
-
-        Xs_L =  interp2d_spline_eval(interp_Xs_L,  Q2, W2,  xa, ya);
-        Xs_T =  interp2d_spline_eval(interp_Xs_T,  Q2, W2,  xa, ya);
-
+        
         ratio  = Xs_L/( Xs_L + Xs_T );
 
         longit = false;
