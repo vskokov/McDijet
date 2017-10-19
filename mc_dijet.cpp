@@ -15,15 +15,15 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Author: Adrian Dumitru and Vladimir Skokov
-//  Last update:  May 5, 2016
+//  Author: Adrian Dumitru, Vladimir Skokov and Thomas Ullrcih 
+//  Last update: Oct 19, 2017  
 //  $Date: November 15, 2015
 //  $Authors: vladi@skokov.net
 //==============================================================================
-
-
-
-#include <math.h>
+//==============================================================================
+//  All changes in code modified by Thomas Ullrich are marked TU
+//==============================================================================
+#include <cmath>  // TU mod (was math.h)
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_ieee_utils.h>
 #include <gsl/gsl_test.h>
@@ -31,11 +31,15 @@
 #include <gsl/gsl_integration.h>
 #include "interp2d/interp2d.h"
 #include "interp2d/interp2d_spline.h"
+//#include "AfterBurner.h"  // TU added (Plug-In header file)
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <random>
 #include <assert.h>
+#include <iomanip>
+
+// #define PRINT_PARTONS 1   // added TU switch on/off event-by-event printout
 
 /*
 // Older versions of gcc may require explicit inclusion of the boost librariries
@@ -49,9 +53,13 @@
 using namespace std;
 typedef mt19937 RNGType;
 
-const size_t number_of_events=1000000; // The total number of events to be generated
-const double E_e = 15.0; // Electorn energy in the lab frame
+//================================================================================= TU
+//                               INPUT IS HERE                                      TU
+//================================================================================= TU
+const size_t number_of_events=3000000; // The total number of events to be generated
+const double E_e = 20.0; // Electorn energy in the lab frame
 const double E_p = 100.0; // Proton energy in the lab frame
+//================================================================================= TU
 
 const double alpha_em = 1.0/137.0; // α = e^2/4π
 const double mp = 1; // Prooton mass
@@ -61,7 +69,7 @@ const size_t Y_size=21, Pt_size=178; // The sizes of the input tables, which wer
 // program solving JIMWLK evolution in Y. Do not change!
 
 
-const double min_qt_to_Pt_ratio = 0.666;
+const double min_qt_to_Pt_ratio = 1; // 0.666;  Change TU; VS: Note that this might be dangerous 
 
 const double qt_min = 1.0; // The minimum value of q⊥
 const double qt_max = 30.0; // The maximum value of q⊥. Do not change due to finite range of the JIMWLK tables
@@ -734,7 +742,8 @@ double DIS::integrated_Xs(double Q, double W, int pol)
 
 DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain) 
 {
-    double sqrtS = sqrt( pow(mp,2) + 2 * E_e * ( E_p + sqrt(pow(E_p,2) - pow(mp,2)) ) ); // The energy in CM frame
+    x0 = 0.5;  
+	double sqrtS = sqrt( pow(mp,2) + 2 * E_e * ( E_p + sqrt(pow(E_p,2) - pow(mp,2)) ) ); // The energy in CM frame
 
     S = sqrtS*sqrtS;
 
@@ -747,14 +756,14 @@ DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain)
     vec_Q2 = new double[ind_Q2];
     vec_W2 = new double[ind_W2];
 
-    double Q2_max = (S-M*M)*X0/(1.0-X0); // See Eqs. (???)
+    double Q2_max = (S-M*M)*x0/(1.0-x0); // See Eqs. (???)
     Q2_min = 4;
 
     double Q2_step = (Q2_max-Q2_min)/(ind_Q2-1);
 
 
     double W2_max = S;
-    double W2_min = M*M+Q2_min*(1.0-X0)/X0;
+    double W2_min = M*M+Q2_min*(1.0-x0)/x0;
     double W2_step = (W2_max-W2_min)/(ind_W2-1);
 
     cout << "# generating interpolating cache\n";
@@ -786,7 +795,8 @@ DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain)
     }
     cout << "# done generating interpolating cache\n";
     cout << "# sqrt(s) A  integrated x_sections\n";
-    cout << sqrtS << " " << A << " " << IntXS_T << " " <<  IntXS_L << "\n"<<flush;
+    cout << sqrtS << " " << A << " " << std::setprecision(5) << std::scientific << IntXS_T << " mb  " <<  IntXS_L << " mb" << endl; // added TU
+    // cout << sqrtS << " " << A << " " << IntXS_T << " " <<  IntXS_L << "\n"<<flush; // removed TU
 
     T=interp2d_bilinear;
     xa = gsl_interp_accel_alloc();
@@ -895,19 +905,32 @@ vector<double> DIS::operator() (void)
 }
 
 int main(int argc, char** argv) {
+    
+    //AfterBurner* afterBurner = new AfterBurner;   // TU added (instantiate plug-in)
+
     gsl_ieee_env_setup();
 
     seed = mix(clock(), time(NULL), time(NULL));
     rng = new RNGType(seed);
 
     DIS generator = DIS(E_e, E_p, A_target);
+#if defined(PRINT_PARTONS)  // TU added
     cout << "#  Pt\t qt\t z\t phi\t phiT\t xS\t W\t Q\t Pol\t k1x\t k1y\t k1z\t k1E\t k2x\t k2y\t k2z\t k2E\n";
+#endif // TU added
     for(int i=0; i<number_of_events; i++) {
         vector<double> event = generator();
+#if defined(PRINT_PARTONS)  // TU added
         for(int j=0; j<event.size(); j++) {
             cout << event[j] << " ";
         }
         cout << "\n" << flush;
+#endif // TU added
+        
+        if ((i+1)%1000 == 0 || i==number_of_events-1) {      // TU added
+            cout << "Events processed: " <<  i+1 << endl;    // TU added
+        }                                                    // TU added
+        //afterBurner->handleEvent(event, i);                  // TU added (call plug-in)
+        
     }
-
+    //afterBurner->finish();  // TU added (wrap-up plug-in)
 }
