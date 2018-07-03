@@ -1,5 +1,0 @@
-Dependencies:  
-1. GSL V1.16 (http://www.gnu.org/software/gsl/)
-2. Boost Libraries V1.58 (http://www.boost.org) for random number generation 
-3. cmake V3.3.2 (https://cmake.org)
-4. The misc.dat should be available in the current working directory 
