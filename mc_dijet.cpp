@@ -39,7 +39,7 @@
 #include <assert.h>
 #include <iomanip>
 
-// #define PRINT_PARTONS 1   // added TU switch on/off event-by-event printout
+#define PRINT_PARTONS 1   // added TU switch on/off event-by-event printout
 
 /*
 // Older versions of gcc may require explicit inclusion of the boost librariries
@@ -480,8 +480,14 @@ vector<double> DiJetEvent::operator() (int pol)
         xs = (*Xsection)(Pt, qt, z, phi, pol) / Xsmax;
         //cout << xs << "\n";
         count++;
-        if (xs>1.0) cerr << "something wrong " << Xsmax << " " <<  xs<< "\n";
-        if((count>500000)||(std::isnan(xs))) {
+        if (xs>1.0) 
+		{
+			cerr << "Something went wrong. The minimizer failed; it is safer to disregard the following event. \n  " << Xsmax << " " <<  xs<< "\n";
+
+			cerr << "z = " <<  z << " Pt = "<< Pt << " qt = " << qt <<  "\n";
+        
+		}
+		if((count>500000)||(std::isnan(xs))) {
             vector<double> out;
             //cerr << "it is taking too long for this configuration \n";
             return out; //empty vector
@@ -554,7 +560,7 @@ DiJetEvent::DiJetEvent(TMD* Xs, double nplusin): Xsection(Xs), nplus(nplusin)
             break;
 
         size = gsl_multimin_fminimizer_size (s);
-        status = gsl_multimin_test_size (size, 1e-2);
+        status = gsl_multimin_test_size (size, 1e-3);
         /*
         if (status == GSL_SUCCESS)
         {
