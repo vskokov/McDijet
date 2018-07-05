@@ -1,6 +1,5 @@
 CC=g++
-INCLUDES = -I /sw/include -I/sw/opt/boost-1_58/include/ -I/home/vskokov/lib/include
-LIBS= -L /sw/lib/ -L/home/vskokov/lib/lib -L interp2d
+LIBS=  -L interp2d
 LIBIN=-lgsl -lgslcblas -linterp2d 
 CFLAGS= -std=c++11 -O2 
 
