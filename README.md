@@ -53,6 +53,11 @@ elliptic azimuthal anisotropy in DIS dijet production at high energy
 
 * Adjust paths if required in Makefile 
 
+* Run 
+	
+	```
+	make
+	```
 
 
 ## Running 
@@ -79,7 +84,7 @@ we strongly recommend to read arXiv:..._
 * Run  
 
 	```
-		./mc_dijet.x > output.dat
+	./mc_dijet.x > output.dat
 	```
 
 * If you would like to directly plot this output then you would
@@ -87,8 +92,8 @@ we strongly recommend to read arXiv:..._
   lines first:
 
 	```
-  		sed -i -e 1,5d output.dat
-  		sed -i -n '/Events/d' output.dat
+  	sed -i -e 1,5d output.dat
+  	sed -i -n '/Events/d' output.dat
    	```
   
   (this edits the file *in place*, make a backup first to preserve the
