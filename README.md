@@ -61,6 +61,37 @@ elliptic azimuthal anisotropy in DIS dijet production at high energy
 
 ## Running 
 
+
+This section provides a brief description of the output of McDijet and
+how to work with it. _To understand the calculations performed by the code 
+we strongly recommend to read arXiv:..._ 
+
+* By default the flag PRINT\_PARTONS, see mc\_dijet.cpp, is set and the output refers to
+  the momenta of the produced quark and anti-quark. The code also
+  prints the virtuality of the photon etc.
+  The order is specified in the 5th line of the output file. Every
+  line after that corresponds to a particular gamma\* + A --> q + qbar
+  event.
+
+  In particular:
+     - pol: photon polarization (0=transverse, 1=longitudinal)
+     - xS is the differential cross section at the given Q2, W, Pt,
+       qt, z, phi, for the given photon polarization
+     - phiT is the azimuthal angle of Pt
+     - phiT + phi is the azimuthal angle of qt
+
+* If you would like to directly plot this output then you would
+  probably want to remove header and "Events processed ..."
+  lines first:
+
+   ```
+  	sed -i -e 1,5d output.dat
+  	sed -i -n '/Events/!p'
+   ```
+  
+  (this edits the file *in place*, make a backup first to preserve the
+  original version)
+
 * Run  
 
 
@@ -71,6 +102,10 @@ elliptic azimuthal anisotropy in DIS dijet production at high energy
 ## Reporting bugs
 
 Please report bugs directly to vladi@skokov.net
+
+
+
+
 
 ## License 
 
