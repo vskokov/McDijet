@@ -482,7 +482,7 @@ vector<double> DiJetEvent::operator() (int pol)
         count++;
         if (xs>1.0) 
 		{
-			cerr << "Something went wrong. The minimizer failed; it is safer to disregard the following event. \n  " << Xsmax << " " <<  xs<< "\n";
+			cerr << "Something went wrong. The minimizer failed; this even will be ignored. \n  " << Xsmax << " " <<  xs<< "\n";
 
 			cerr << "z = " <<  z << " Pt = "<< Pt << " qt = " << qt <<  "\n";
             vector<double> out;
