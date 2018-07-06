@@ -86,6 +86,7 @@ we strongly recommend to read arXiv:..._
 	```
 	./mc_dijet.x > output.dat
 	```
+  By default 30 000 events will be produced and stored in the file output.dat. 
 
 * If you would like to directly plot this output then you would
   probably want to remove header and "Events processed ..."
