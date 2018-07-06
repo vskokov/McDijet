@@ -88,7 +88,7 @@ we strongly recommend to read arXiv:..._
 
 	```
   		sed -i -e 1,5d output.dat
-  		sed -i -n '/Events/!p'
+  		sed -i -n '/Events/d' output.dat
    	```
   
   (this edits the file *in place*, make a backup first to preserve the
