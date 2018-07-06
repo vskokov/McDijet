@@ -56,7 +56,7 @@ typedef mt19937 RNGType;
 //================================================================================= TU
 //                               INPUT IS HERE                                      TU
 //================================================================================= TU
-const size_t number_of_events=3000000; // The total number of events to be generated
+const size_t number_of_events=30000; // The total number of events to be generated
 const double E_e = 20.0; // Electorn energy in the lab frame
 const double E_p = 100.0; // Proton energy in the lab frame
 //================================================================================= TU
