@@ -485,7 +485,8 @@ vector<double> DiJetEvent::operator() (int pol)
 			cerr << "Something went wrong. The minimizer failed; it is safer to disregard the following event. \n  " << Xsmax << " " <<  xs<< "\n";
 
 			cerr << "z = " <<  z << " Pt = "<< Pt << " qt = " << qt <<  "\n";
-        
+            vector<double> out;
+        	return out; //empty vector
 		}
 		if((count>500000)||(std::isnan(xs))) {
             vector<double> out;
