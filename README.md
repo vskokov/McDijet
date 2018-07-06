@@ -53,11 +53,7 @@ elliptic azimuthal anisotropy in DIS dijet production at high energy
 
 * Adjust paths if required in Makefile 
 
-* Run 
-	
-	```
-		make all 
-	```
+
 
 ## Running 
 
@@ -74,30 +70,31 @@ we strongly recommend to read arXiv:..._
   event.
 
   In particular:
-     - pol: photon polarization (0=transverse, 1=longitudinal)
-     - xS is the differential cross section at the given Q2, W, Pt,
-       qt, z, phi, for the given photon polarization
-     - phiT is the azimuthal angle of Pt
-     - phiT + phi is the azimuthal angle of qt
+  	- pol: photon polarization (0=transverse, 1=longitudinal)
+  	- xS is the differential cross section at the given Q2, W, Pt,
+	qt, z, phi, for the given photon polarization
+	- phiT is the azimuthal angle of Pt
+	- phiT + phi is the azimuthal angle of qt
+
+* Run  
+
+	```
+		./mc_dijet.x > output.dat
+	```
 
 * If you would like to directly plot this output then you would
   probably want to remove header and "Events processed ..."
   lines first:
 
-   ```
-  	sed -i -e 1,5d output.dat
-  	sed -i -n '/Events/!p'
-   ```
+	```
+  		sed -i -e 1,5d output.dat
+  		sed -i -n '/Events/!p'
+   	```
   
   (this edits the file *in place*, make a backup first to preserve the
   original version)
 
-* Run  
 
-
-	```
-		mc_dijet.x > output.dat
-	```
 
 ## Reporting bugs
 
