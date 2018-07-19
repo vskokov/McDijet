@@ -78,7 +78,8 @@ const double z_reg = 1e-3; // z lies in the range [z_reg,1-z_reg]. 0 and 1 are e
 // divergent contributions proportional to 1/z and 1/(1-z)
 
 const double epsrel = 1e-1; // The aimed relative error for computing the numericl integrals
-constexpr double X0 = 1e-2; // The maximal value of Bjorken x and x_g
+constexpr double X0 = 1e-2; // The maximal value of x_g
+constexpr double x0 = 1e-2; // The maximal value of Bjorken x; do not change without changing precision of the interpolating tables, see lines 757 and 758; increase ind_Q2 and ind_W2 appropriately 
 
 // Below I the parameters for the Gold Nucleus are defined
 const double S_perp0 = 1300; // The transverse area S⊥ in mb
@@ -749,8 +750,7 @@ double DIS::integrated_Xs(double Q, double W, int pol)
 
 DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain) 
 {
-    x0 = 0.5;  
-	double sqrtS = sqrt( pow(mp,2) + 2 * E_e * ( E_p + sqrt(pow(E_p,2) - pow(mp,2)) ) ); // The energy in CM frame
+    double sqrtS = sqrt( pow(mp,2) + 2 * E_e * ( E_p + sqrt(pow(E_p,2) - pow(mp,2)) ) ); // The energy in CM frame
 
     S = sqrtS*sqrtS;
 
@@ -791,9 +791,9 @@ DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain)
             Xs_T[i+j*ind_Q2] = Flux_T(Q2, W2, S) * integrated_Xs(Q, W, 0);
             Xs_L[i+j*ind_Q2] = Flux_L(Q2, W2, S) * integrated_Xs(Q, W, 1);
 			
-			MaxSigmadQ2dW2 = max(MaxSigmadQ2dW2, Xs_T[i+j*ind_Q2] + Xs_L[i+j*ind_Q2] );   
-			//cerr << Q << " "<< W << " " << Xs_T[i+j*ind_Q2] << " " <<  Xs_L[i+j*ind_Q2] << endl ;
-			//cerr << Q << " "<< W << " " <<  Flux_T(Q2, W2, S)  << " " <<  Flux_L(Q2, W2, S)   << endl ;
+	    MaxSigmadQ2dW2 = max(MaxSigmadQ2dW2, Xs_T[i+j*ind_Q2] + Xs_L[i+j*ind_Q2] );   
+//cerr << Q << " "<< W << " " << Xs_T[i+j*ind_Q2] << " " <<  Xs_L[i+j*ind_Q2] << endl ;
+//cerr << Q << " "<< W << " " <<  Flux_T(Q2, W2, S)  << " " <<  Flux_L(Q2, W2, S)   << endl ;
 
             IntXS_T+=Xs_T[i+j*ind_Q2]*W2_step*Q2_step;
             IntXS_L+=Xs_L[i+j*ind_Q2]*W2_step*Q2_step;
