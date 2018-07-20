@@ -79,7 +79,7 @@ const double z_reg = 1e-3; // z lies in the range [z_reg,1-z_reg]. 0 and 1 are e
 
 const double epsrel = 1e-1; // The aimed relative error for computing the numericl integrals
 constexpr double X0 = 1e-2; // The maximal value of x_g
-constexpr double x0 = 1e-2; // The maximal value of Bjorken x; do not change without changing precision of the interpolating tables, see lines 757 and 758; increase ind_Q2 and ind_W2 appropriately 
+constexpr double x0_Bj = 1e-2; // The maximal value of Bjorken x; do not change without changing precision of the interpolating tables, see lines 757 and 758; increase ind_Q2 and ind_W2 appropriately 
 
 // Below I the parameters for the Gold Nucleus are defined
 const double S_perp0 = 1300; // The transverse area S⊥ in mb
@@ -754,8 +754,9 @@ DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain)
 
     S = sqrtS*sqrtS;
 
-    ind_Q2 = 10; // The numerical integration of the x-sections cannot be done for all Q and W.
-    ind_W2 = 10; // Thus it will be only computed at ind_Q2xind_W2 points and then extrapolated between those.
+    double x0=x0_Bj; 
+    ind_Q2 = 50; // The numerical integration of the x-sections cannot be done for all Q and W.
+    ind_W2 = 50; // Thus it will be only computed at ind_Q2xind_W2 points and then interpolated between those.
 
     Xs_L = new double[ind_Q2*ind_W2]; //The matrices to be populated with the integrated x-section
     Xs_T = new double[ind_Q2*ind_W2];
