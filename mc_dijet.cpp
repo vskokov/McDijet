@@ -351,6 +351,8 @@ vector<double> TMD::get_Xsection_components(double Pt, double qt, double z, doub
 void TMD::load_data(void) {
     ifstream data ("misc.dat"); //External file. With the results from JIMWLK.
 
+	if(data.is_open())
+	{
 
     for(size_t i=0; i<Pt_size; i++) {
         data>>Pt_arr[i];
@@ -367,6 +369,12 @@ void TMD::load_data(void) {
     for(size_t i=0; i<Pt_size*Y_size; i++) {
         data>>xH_arr[i];
     }
+	}
+	else
+	{
+		cout << "Error: The file misc.dat cannot be found; get it from https://github.com/vskokov/McDijet  \n";
+		exit(0);
+	}
     data.close();
 }
 
@@ -767,12 +775,12 @@ DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain)
     double Q2_max = (S-M*M)*x0/(1.0-x0); // See Eqs. (???)
     Q2_min = 4;
 
-    double Q2_step = (Q2_max-Q2_min)/(ind_Q2-1);
+    double Q2_step = (Q2_max-Q2_min)/(ind_Q2-1.0);
 
 
     double W2_max = S;
     double W2_min = M*M+Q2_min*(1.0-x0)/x0;
-    double W2_step = (W2_max-W2_min)/(ind_W2-1);
+    double W2_step = (W2_max-W2_min)/(ind_W2-1.0);
 
     cout << "# generating interpolating cache\n";
 
@@ -782,7 +790,8 @@ DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain)
 	
 
     for(int i=0; i<ind_Q2; i++) {
-        double Q2 = Q2_min + Q2_step*i;
+        
+		double Q2 = Q2_min + Q2_step*i;
         vec_Q2[i] =  Q2;
         for(int j=0; j<ind_W2; j++) {
             double W2 = W2_min + W2_step*j;
@@ -799,6 +808,7 @@ DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain)
             IntXS_T+=Xs_T[i+j*ind_Q2]*W2_step*Q2_step;
             IntXS_L+=Xs_L[i+j*ind_Q2]*W2_step*Q2_step;
         }
+    	cout << "# Progress: " <<  double(i+1)/ind_Q2*100.0 << "%"<<"\n" ;
 		//cerr << endl;
     }
     cout << "# done generating interpolating cache\n";
