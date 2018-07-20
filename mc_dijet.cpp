@@ -83,7 +83,7 @@ constexpr double x0_Bj = 1e-2; // The maximal value of Bjorken x; do not change 
 // Below I the parameters for the Gold Nucleus are defined
 const double S_perp0 = 1300; // The transverse area S⊥ in mb
 const double Qs0 = 1.2; // The saturation scale in GeV
-const int A0 = 197; // The reference number of nucleons; assumed to be Au nucleus; do not confuse with A_target
+const int A0 = 197; // The reference number of nucleons; assumed to be Au nucleus; do not confuse with A_target. If you do not know what you are doing do not change A0; if you want ot study the dependence on A, change A_target instead. 
 
 
 unsigned long seed; // The seed and the pointer to the random number generator object.
