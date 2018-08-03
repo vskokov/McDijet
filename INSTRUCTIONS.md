@@ -8,15 +8,20 @@
 
 * For those who are interested in using your own implementation of small x evolution we provide the
 decription of the file format
+
 		* First Pt_size lines in misc.dat are the values of the momentum q⟂/Q_s0 (from the minimal value to the maximal one), where Q_s0 is the saturation momentum at x=x_0;
+
 		* Next Y_size lines in misc.dat are the values of the (alphaY)/alpha_s_ref, where (alphaY) is the resummation variable α_sY in JIMWLK. The current value of alpha_s_ref is 0.15; it is hardwired in the tables; it is only the reference value of α_s and is NOT the value of α_s used in the actual physical computations. If you want to change α_s change the variable alpha_s instead.
+
 		* Next Pt_size x Y_size lines are the values of xG (see the normalization below); the ordering is explained in the following pseudocode
 		```
 		for Y from 0 to Ymax:
 			for qT from qTmin to qTmax:
 			print xG(Y, qT)      
 		```
+
 		* Next Pt_size x Y_size lines are the values of xh (see the normalization below); the ordering is explained above
+
 		* Note that the steps 3 and 4 do not contain the properly normalized xh and xG but instead
 		```
 			α_s xG /(2 L^2)  = 1/L^2 \int d^2x/(2π)^2  d^2y/(2π)^2 exp(-iq⋅(x-y)) A_{i,a}(x)  A_{i,a}(y)
