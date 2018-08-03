@@ -20,20 +20,19 @@ decription of the file format
 
 		* Next Pt_size x Y_size lines are the values of xG (see the normalization below); the ordering
 		is explained in the following pseudocode
-		```
+
 		for Y from 0 to Ymax:
 			for qT from qTmin to qTmax:
 			print xG(Y, qT)      
-		```
 
 		* Next Pt_size x Y_size lines are the values of xh (see the normalization below); the ordering
 		is explained above
 
 		* Note that the steps 3 and 4 do not contain the properly normalized xh and xG but instead
-		```
+
 			α_s xG /(2 L^2)  = 1/L^2 \int d^2x/(2π)^2  d^2y/(2π)^2 exp(-iq⋅(x-y)) A_{i,a}(x)  A_{i,a}(y)
 			with   A_i(x) = 1/i U†(x) ∂_i U(x)
-		```
+
 		where L is the length of the lattice in the lattice units. In the code S_perp_JIMWLK =  2704.0 =
 		L^2. If your tables use different L, S_perp_JIMWLK should be properly adjusted. The
 		normalization for xh is similar as for xG.
