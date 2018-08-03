@@ -62,6 +62,8 @@ const double E_p = 100.0; // Proton energy in the lab frame
 //================================================================================= TU
 
 const double alpha_em = 1.0/137.0; // α = e^2/4π
+const double alpha_s = 0.25; // α_s
+
 const int A_target=197; // The total number of nucleons in the nucleus target
 const double M = 1; //The nuclon mass
 
@@ -72,6 +74,7 @@ const double min_qt_to_Pt_ratio = 1; // 0.666;  Change TU; VS: Note that this mi
 
 const double qt_min = 1.0; // The minimum value of q⊥
 const double qt_max = 30.0; // The maximum value of q⊥. Do not change due to finite range of the JIMWLK tables
+const double Y_inp_max=6.666670; // The maximum value of ln(x0/x) / α_ref. Do not change unless you read INSTRUCTIONS.md
 const double Pt_max = 30.0; // The maximum value of \tilde{P⊥}
 const double z_reg = 1e-3; // z lies in the range [z_reg,1-z_reg]. 0 and 1 are excluded to remove spurious
 // divergent contributions proportional to 1/z and 1/(1-z)
@@ -84,6 +87,8 @@ constexpr double x0_Bj = 1e-2; // The maximal value of Bjorken x; do not change 
 const double S_perp0 = 1300; // The transverse area S⊥ in mb
 const double Qs0 = 1.2; // The saturation scale in GeV
 const int A0 = 197; // The reference number of nucleons; assumed to be Au nucleus; do not confuse with A_target. If you do not know what you are doing do not change A0; if you want ot study the dependence on A, change A_target instead.
+const double alpha_s_ref = .15; // This is a reference alpha_s which is specific for the provided
+//file misc.dat; do not change unless you had read and understood INSTRUCTIONS.md
 
 
 unsigned long seed; // The seed and the pointer to the random number generator object.
@@ -180,12 +185,13 @@ class TMD
     double sqrtS; // W
     double s; // W^2
     double prefactor; //Prefactor that includes α_em α_s ∑_f q_f^2, see Eqs (1-2) in 1508.04438
+    // note that factor α_s partially was accounted for in misc.dat, g^2 is a part of WW TMD definition
     double Q; // Q
     double S_perp; // The transverse area in mb
     double Qs; // The saturation scele in GeV
 
     constexpr static double sum_charge2 = .666666; // The sum of quark electric charges squared; ∑_f q_f^2
-    constexpr static double alpha_s = .25; // α_s Can be changed.
+
     constexpr static double S_perp_JIMWLK =  2704.0; // Do not change! The conversion factor.
     // JIMWLK is computed on a lattice of a certain transverse size.
 
@@ -279,7 +285,10 @@ bool TMD::Out_of_Kinematic_Constrains(double Pt, double qt, double x) {
     if(x>x0) return true;
     if(qt>min_qt_to_Pt_ratio*Pt) return true; // This constraints ensures that only event with q⊥<P⊥*min_qt_to_Pt_ratio  are generated
     if(qt>qt_max) return true;
-    if(x<.000129349) return true; //JIMWLK smallest x
+
+    double Ymax=alpha_s_ref/alpha_s*Y_inp_max;
+    double xmin=x0/exp(Ymax);
+    if(x<xmin) return true; //JIMWLK smallest x
 
     return false;
 }
@@ -293,11 +302,14 @@ double TMD::get_Xsection(double Pt, double qt, double z, double phi, int pol)
 
     double epsf2= get_epsf2(Q, z);
     double Y = log(x0/x);
+    double alphaCorr_Y = Y*alpha_s_ref/alpha_s; //Note the file misc.dat was generated with alpha_s_ref = 0.15! that is wit the definition
+    // alpha_s Y = 0.15 ln(x_0/x)!
+    // It was hard wired in the tables for convenience to introduce the rouning coupling evolution
 
-    double xG = get_xG_at_Y_qt(Y,qt);
-    double xH = get_xH_at_Y_qt(Y,qt);
+    double xG = get_xG_at_Y_qt(alphaCorr_Y,qt);
+    double xH = get_xH_at_Y_qt(alphaCorr_Y,qt);
 
-    double Conversion_prefactor= S_perp/S_perp_JIMWLK * 2 * M_PI; //one angle is integrated out
+    double Conversion_prefactor= 2*S_perp/S_perp_JIMWLK * 2 * M_PI; //one angle is integrated out
 
     double transverse_Xsection =
         prefactor * (z*z  + (1.0-z)*(1.0-z) ) * ( epsf2*epsf2 + pow(Pt,4) ) / pow(Pt*Pt+epsf2, 4) *
@@ -327,9 +339,10 @@ vector<double> TMD::get_Xsection_components(double Pt, double qt, double z, doub
     //double Q = get_Q(Pt);
     double epsf2= get_epsf2(Q, z);
     double Y = log(x0/x);
+    double alphaCorr_Y = Y*alpha_s_ref/alpha_s;
 
-    double xG = get_xG_at_Y_qt(Y,qt);
-    double xH = get_xH_at_Y_qt(Y,qt);
+    double xG = get_xG_at_Y_qt(alphaCorr_Y,qt);
+    double xH = get_xH_at_Y_qt(alphaCorr_Y,qt);
 
     double Conversion_prefactor= 2 * S_perp/S_perp_JIMWLK * 2 * M_PI; //one angle is integrated out
 
