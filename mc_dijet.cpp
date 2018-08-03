@@ -264,7 +264,7 @@ TMD::~TMD() {
 
 
 double TMD::get_x(double Pt, double qt, double z) {
-    double x = ( qt*qt + Pt*Pt/(z*(1.0-z)) ) / s;
+    double x = ( Q*Q + qt*qt + Pt*Pt/(z*(1.0-z)) ) / (s + Q*Q - M*M);
     return x;
 }
 
