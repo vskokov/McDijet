@@ -31,7 +31,7 @@
 #include <gsl/gsl_integration.h>
 #include "interp2d/interp2d.h"
 #include "interp2d/interp2d_spline.h"
-//#include "AfterBurner.h"  // TU added (Plug-In header file)
+#include "AfterBurner.h"  
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -62,7 +62,7 @@ const double E_p = 100.0; // Proton energy in the lab frame
 //================================================================================= TU
 
 const double alpha_em = 1.0/137.0; // α = e^2/4π
-const double alpha_s = 0.25; // α_s
+const double alpha_s = 0.15; // α_s
 
 const int A_target=197; // The total number of nucleons in the nucleus target
 const double M = 1; //The nuclon mass
@@ -94,6 +94,7 @@ const double alpha_s_ref = .15; // This is a reference alpha_s which is specific
 unsigned long seed; // The seed and the pointer to the random number generator object.
 // The initialization is in main
 RNGType *rng;
+
 
 double yf(double Q2, double W2, double S)
 /*
@@ -640,6 +641,7 @@ class DIS
     std::uniform_real_distribution<> *x_sample;
     std::uniform_real_distribution<> *r_sample;
 
+	AfterBurner* AB; 
 
     double sqrtS; // "real" √s
     double E_e; // "real" √s
@@ -674,7 +676,7 @@ class DIS
 
     double integrated_Xs(double Q, double W, int pol);
   public:
-    DIS(double E_ein, double E_pin, int Ain); //The constructor. The parameters are the electron energy and the proton energy
+    DIS(double E_ein, double E_pin, int Ain, AfterBurner* ABin); //The constructor. The parameters are the electron energy and the proton energy
     ~DIS(); // The destructor
     vector<double> operator() (void);
 };
@@ -748,7 +750,7 @@ double DIS::integrated_Xs(double Q, double W, int pol)
  to randomly assign the polarization to the photon.
  */
 {
-    TMD generator = TMD(W, Q, A); //create the TMD class
+	TMD generator = TMD(W, Q, A); //create the TMD class
 
     double result, error;
     gsl_function F;
@@ -767,9 +769,11 @@ double DIS::integrated_Xs(double Q, double W, int pol)
     return result;
 }
 
-DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain)
+DIS::DIS(double E_ein, double E_pin, int Ain, AfterBurner* ABin):E_e(E_ein),E_p(E_pin),A(Ain), AB(ABin) 
 {
-    double sqrtS = sqrt( pow(M,2) + 2 * E_e * ( E_p + sqrt(pow(E_p,2) - pow(M,2)) ) ); // The energy in CM frame
+	AB->init(A, E_e, E_p); 
+
+	double sqrtS = sqrt( pow(M,2) + 2 * E_e * ( E_p + sqrt(pow(E_p,2) - pow(M,2)) ) ); // The energy in CM frame
 
     S = sqrtS*sqrtS;
 
@@ -843,6 +847,7 @@ DIS::DIS(double E_ein, double E_pin, int Ain):E_e(E_ein),E_p(E_pin),A(Ain)
 
 
 DIS::~DIS() {
+	AB->finish(); 
     delete(Q2_sample);
     delete(r_sample);
     gsl_interp_accel_free(xa);
@@ -930,6 +935,8 @@ vector<double> DIS::operator() (void)
         output.push_back(k1k2.at(i));
     }
 
+	AB->event(&output); 
+
     return output;
 }
 
@@ -937,28 +944,22 @@ int main(int argc, char** argv) {
 
     //AfterBurner* afterBurner = new AfterBurner;   // TU added (instantiate plug-in)
 
-    gsl_ieee_env_setup();
+	NoBurner afterBurner; 
+    
+	gsl_ieee_env_setup();
 
     seed = mix(clock(), time(NULL), time(NULL));
     rng = new RNGType(seed);
 
-    DIS generator = DIS(E_e, E_p, A_target);
-#if defined(PRINT_PARTONS)  // TU added
-    cout << "#  Pt\t qt\t z\t phi\t phiT\t xS\t W\t Q\t Pol\t k1x\t k1y\t k1z\t k1E\t k2x\t k2y\t k2z\t k2E\n";
-#endif // TU added
+    DIS generator = DIS(E_e, E_p, A_target, &afterBurner);
+
     for(int i=0; i<number_of_events; i++) {
         vector<double> event = generator();
-#if defined(PRINT_PARTONS)  // TU added
-        for(int j=0; j<event.size(); j++) {
-            cout << event[j] << " ";
-        }
-        cout << "\n" << flush;
-#endif // TU added
 
-        if ((i+1)%1000 == 0 || i==number_of_events-1) {      // TU added
-            cout << "Events processed: " <<  i+1 << endl;    // TU added
-        }                                                    // TU added
-        //afterBurner->handleEvent(event, i);                  // TU added (call plug-in)
+        if ((i+1)%1000 == 0 || i==number_of_events-1) {    
+            cout << "#Events processed: " <<  i+1 << endl;
+        }                                                
+        //afterBurner->handleEvent(event, i);           
 
     }
     //afterBurner->finish();  // TU added (wrap-up plug-in)
