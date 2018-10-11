@@ -101,6 +101,18 @@ we strongly recommend to read arXiv:..._
   original version)
 
 
+## Pythia as an AfterBurner
+You can use Pythia8 to produce paticle showers from the two genrated partons. 
+For this you have to 
+
+* Download Pythia 8 from http://home.thep.lu.se/~torbjorn/pythia8/pythia8235.tgz 
+* Extract it to the same folder, where McDijet folder is; that is "pythia8255" and "McDijet"  should be located in the same folder
+* Configure and compile Pythia: ./configure; make 
+* Uncomment line 33 in mcdijet.cpp: #include "PythiaAfterBurner.h" 
+* Comment line 944 in mcdijet.cpp: AfterBurner * afterBurner = new NoBurner; 
+* Uncomment line 945 in mcdijet.cpp: AfterBurner * afterBurner = new PythiaAfterBurner; 
+* Run make pythiaAfterBurner; it will produce the executable mcdijet.x
+* The events are not saved in a file; instead you might consider adding your analysis routins to PythiaAfterBurner.cpp, see line 183
 
 ## Reporting bugs
 
