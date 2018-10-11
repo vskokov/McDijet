@@ -65,7 +65,7 @@ elliptic azimuthal anisotropy in DIS dijet production at high energy
 
 This section provides a brief description of the output of McDijet and
 how to work with it. _To understand the calculations performed by the code 
-we strongly recommend to read arXiv:..._ 
+we strongly recommend to read arXiv:1809.02615_  
 
 * By default the flag PRINT\_PARTONS, see mc\_dijet.cpp, is set and the output refers to
   the momenta of the produced quark and anti-quark. The code also
