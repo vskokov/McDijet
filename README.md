@@ -126,4 +126,4 @@ Please report bugs directly to vladi@skokov.net
 
 
 Code is under the [GNU General Public License](https://www.gnu.org/licenses/gpl-3.0.en.html). 
-Please cite ... if used 
+Please cite http://inspirehep.net/record/1693295 if used 
